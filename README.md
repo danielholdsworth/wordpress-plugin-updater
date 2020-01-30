@@ -9,3 +9,8 @@ An Ansible & Python project that takes a list of plugins by download URL then sc
   <li> Ansible => 2.7.5 </li>
   <li>Python => 3</li>
   <li> rpmbuild tool & built environment </li>
+
+
+<h2>Usage</h2>
+
+To run, simple run ```py plugin-check.py```
