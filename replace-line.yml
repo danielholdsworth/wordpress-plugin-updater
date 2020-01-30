@@ -2,7 +2,7 @@
 #
 ###############################################
 - name: Replace line in master-plugin file
-  hosts: localhost
+  hosts: localhost #(Ansible)
   tasks:
     - name: Replacing line
       command: "sed -i '/{{ package }}/ c\\{{ new_line }}' <PATH/TO/ENV>/mytemplates/plugin-master.txt"
