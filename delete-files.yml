@@ -2,15 +2,15 @@
 #
 ##########################################
 - name: Remove RPM files on remote server
-  hosts: artemis
+  hosts: <HOST>
   become: yes
   become_method: sudo
   tasks:
     - name: remove .spec file
-      shell: "rm /home/builder/rpmbuild/SPECS/{{ package }}.spec"
+      shell: "rm <PATH/TO/RPMBUILD/ENV>/rpmbuild/SPECS/{{ package }}.spec"
 
     - name: remove .tar.gz file
-      shell: "rm /home/builder/rpmbuild/SOURCES/{{ package }}.tar.gz"
+      shell: "rm <PATH/TO/RPMBUILD/ENV>/rpmbuild/SOURCES/{{ package }}.tar.gz"
 
     - name: remove RPM file
-      shell: "rm /home/builder/rpmbuild/RPMS/noarch/{{ package }}-1.1.0-1.noarch.rpm"
+      shell: "rm <PATH/TO/RPMBUILD/ENV>/rpmbuild/RPMS/noarch/{{ package }}-1.1.0-1.noarch.rpm"
