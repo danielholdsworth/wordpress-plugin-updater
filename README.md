@@ -23,9 +23,9 @@ Do you wish to update the package?(y or n): ```
 
 once you enter 'y' the script will run through the playbooks in around 20 seconds and create a new RPM!
 
-```
-Do you wish to update the package?(y or n): y
-Updating!
+
+
+```Updating!
 
 PLAY [Remove RPM files on remote server] ***************************************************************************************************************************************************************
 
