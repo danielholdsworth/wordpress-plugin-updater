@@ -1,0 +1,8 @@
+# REPLACES OUTDATED PLUGIN WITH LATEST IN PLUGIN-MASTER.TXT
+#
+###############################################
+- name: Replace line in master-plugin file
+  hosts: localhost
+  tasks:
+    - name: Replacing line
+      command: "sed -i '/{{ package }}/ c\\{{ new_line }}' <PATH/TO/ENV>/mytemplates/plugin-master.txt"
