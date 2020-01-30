@@ -1,0 +1,33 @@
+# CREATES RPM SPECFILE FOR RPMBUILD ENV
+#
+##########################################
+- name: create SPEC file for plugin
+  copy:
+    content: |
+
+             Name:       PACKAGENAME
+             Version:    1.1.0
+             Release:    1
+             Summary:    Wordpress PACKAGENAME Plugin
+             License:    GPLv2+
+
+             BuildArch: noarch
+
+             %description
+             PACKAGENAME Plugin
+
+             %prep
+
+             %install
+             mkdir -p %{buildroot}/usr/share/wordpress/wp-content/plugins
+             tar -C %{buildroot}/usr/share/wordpress/wp-content/plugins -zxvf <PATH/TO/ENV>/rpmbuild/SOURCES/PACKAGENAME.tar.gz
+
+             %files
+
+    dest: "/home/builder/rpmbuild/SPECS/temp.spec"
+
+- name: replace PACKAGENAME with actual name
+  shell: "sed 's/PACKAGENAME/{{ package }}/' <PATH/TO/ENV>/rpmbuild/SPECS/temp.spec > <PATH/TO/ENV>/rpmbuild/SPECS/{{ package }}.spec"
+
+- name: add files to end of spec file
+  shell: "cat <PATH/TO/ENV>/final_content.txt >> <PATH/TO/ENV>/rpmbuild/SPECS/{{ package }}.spec"
