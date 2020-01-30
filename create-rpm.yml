@@ -1,0 +1,98 @@
+- name: Create an RPM Package from a download link
+  hosts: <HOSTS>
+  tasks:
+    - name: download zip to get contents
+      get_url:
+        url: "{{ url }}"
+        dest: <PATH/TO/RPMBUILD/ENV>
+
+    - name: grab contents of package
+      shell: 'unzip -l <PATH/TO/RPMBUILD/ENV>/*.zip > /home/builder/content.txt'
+
+    - name: strip file of unwanted lines
+      shell: awk '/{{ package }}\//' <PATH/TO/RPMBUILD/ENV>/content.txt > <PATH/TO/RPMBUILD/ENV>/cut_content.txt
+
+    - name: strip file of unwanted lines
+      become: yes
+      shell: ed "<PATH/TO/RPMBUILD/ENV>/cut_content.txt" <<<$'1d\nwq\n'
+
+    - name: remove all before package name
+      shell: "sed 's/.*{{ package }}\\//\\/{{ package }}\\//' <PATH/TO/RPMBUILD/ENV>/cut_content.txt > <PATH/TO/RPMBUILD/ENV>/new_content.txt"
+
+    - name: add prefix to files
+      shell: "sed 's/.*\\/{{ package }}\\//\\/usr\\/share\\/wordpress\\/wp-content\\/plugins\\/{{ package }}\\//' <PATH/TO/RPMBUILD/ENV>/new_content.txt > <PATH/TO/RPMBUILD/ENV>/final_content.txt"
+
+    - name: finalize content file
+      shell: "sed  -i '1i /usr/share/wordpress/wp-content/plugins/{{ package }}/' <PATH/TO/RPMBUILD/ENV>/final_content.txt"
+
+    - name: remove this temp file
+      command: "rm -rf <PATH/TO/RPMBUILD/ENV>/{{ package }}*.zip"
+
+    - name: download & unzip .zip
+      unarchive:
+        src: "{{ url }}"
+        dest: <PATH/TO/RPMBUILD/ENV>
+        remote_src: yes
+
+    - name: tar new package
+      archive:
+        path: "<PATH/TO/RPMBUILD/ENV>/{{ package }}"
+        dest: "<PATH/TO/RPMBUILD/ENV>/{{ package }}.tar.gz"
+
+    - name: Recursively remove un-compressed package
+      file:
+        path: "<PATH/TO/RPMBUILD/ENV>/{{ package }}"
+        state: absent
+
+    - name: remove this .zip file
+      command: "rm -rf <PATH/TO/RPMBUILD/ENV>/{{ package }}*.zip"
+
+    - name: Move .tar into SOURCES folder
+      shell: "mv <PATH/TO/RPMBUILD/ENV>/{{ package }}.tar.gz <PATH/TO/RPMBUILD/ENV>/rpmbuild/SOURCES/"
+
+    - name: Remove existing .tar.gz file
+      file:
+        path: "<PATH/TO/RPMBUILD/ENV>/{{ package }}.tar.gz"
+        state: absent
+
+- name: Create spec file
+  hosts: <HOST>
+  become: true
+  roles:
+    - ./rpm-specfile
+
+- name: build final RPM
+  hosts: artemis
+  become: yes
+  become_user: builder
+  tasks:
+    - name: Use rpm build to create rpm
+      shell: "rpmbuild -bb <PATH/TO/RPMBUILD/ENV>/rpmbuild/SPECS/{{ package }}.spec"
+      register: out
+    - debug: var=out.stdout_lines
+
+
+    - name: Change permissions to builder
+      file:
+        path: "<PATH/TO/RPMBUILD/ENV>/rpmbuild/RPMS/noarch/{{ package }}-1.1.0-1.noarch.rpm"
+        owner: builder
+        group: builder
+
+- name: Move RPMS to YUM repo
+  hosts: artemis
+  become: yes
+  tasks:
+    - name: move rpm to yum repo
+      shell: "cp <PATH/TO/RPMBUILD/ENV>/rpmbuild/RPMS/noarch/{{ package }}* /repos/CentOS/7/Packages/"
+
+    - name: refresh YUM repo after adding new RPM
+      shell: 'createrepo --update /repos/CentOS/'
+
+
+############################################# CLEAN UP #######################
+
+    - name: cleaning up txt files
+      shell: 'rm -rf <PATH/TO/RPMBUILD/ENV>/*.txt'
+
+    - name: cleaning up zip files
+      shell: 'rm -rf <PATH/TO/RPMBUILD/ENV>/*.zip'
